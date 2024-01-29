@@ -1,0 +1,210 @@
+
+MY VARIATON OF PREDICTION
+
+```{r 13}
+# According to Janet's line 219, copyJ_w_useful.R file
+# to try fix the part that it gets stuck (spoiler it took a fucking long time too)
+raster4pred_ <- aggregate(raster_allholes, fact = 2, fun = mean)
+raster4pred <- projectRaster(raster4pred_, crs = CRS("+proj=utm +zone=39 ellps=WGS84 +units=km"))
+dp <- rasterToPoints(raster4pred)
+coop <- dp[, c("x", "y")]
+
+A.pred <- inla.spde.make.A(mesh_kmD, loc = coop)
+
+#Stack for prediction at mesh nodes
+stk.pred <- inla.stack(
+  data = list(y = NA, e = 0),
+  A = list(A.pred, 1),
+  effects =list(list(i = 1:mesh_kmD$n), list(b0 = rep(1, nrow(dp)))), #data = list(y = rep(NA, nrow(coop)), e = rep(0, nrow(coop))),
+  tag = 'pred')
+
+joint.stk <- inla.stack(stk.pp, stk.pred)
+
+form.barrier <- y ~ 0 + b0 + f(i, model = barrier.model)
+pp.res.j <- inla(form.barrier,
+                 data = inla.stack.data(joint.stk),
+                 family = 'poisson', 
+                 control.predictor = list(A = inla.stack.A(joint.stk), link = 1), 
+                 E = inla.stack.data(joint.stk)$e, 
+                 inla.mode = "experimental")
+summary(pp.res.j)
+```
+
+
+```{r 13}
+plot(pp.res.j, plot.prior = TRUE)
+plot(inla.tmarginal(function(x){exp(x)}, pp.res.j$marginals.hyperpar$`Theta1 for i`),
+       type = "l", main = "Posterior for marginal SD")
+plot(inla.tmarginal(function(x){exp(x)}, pp.res.j$marginals.hyperpar$`Theta2 for i`),
+       type = "l", main = "Posterior for range")
+```
+
+
+```{r 13}
+pp.res.pp <- inla(form.barrier, 
+               data = inla.stack.data(stk.pp), 
+               family = 'poisson', 
+               control.predictor = list(A = inla.stack.A(stk.pp), link = 1), 
+               E = inla.stack.data(stk.pp)$e,
+               inla.mode = "experimental")
+
+summary(pp.res.pp)
+```
+
+```{r 13}
+# run in separate .R file instead of Rmarkdown
+poly.water <- sp_seaNA
+local.plot.fieldpp(field = pp.res.j$summary.random$i$mean, 
+                  mesh = mesh_kmD,
+                  poly.water = poly.water,
+                  main = "", 
+                  zlim = c(-3,4))
+plot(poly.barrier, add=T, col='grey', main = '')
+points(cords_Dng.sp[1:n,], pch = 16, cex = 0.5)
+title(main = 'Spatial field')
+
+local.plot.fieldpp(pp.res.j$summary.random$i$sd, 
+                   mesh_kmD,
+                   poly.water,
+                   main = "", 
+                   zlim = c(1.5,2.6))
+plot(poly.barrier, add=T, col='grey', main = '')
+points(cords_Dng.sp[1:n,], pch = 16, cex = 0.5)
+title(main = 'SD of spatial field')
+```
+
+```{r}
+# old code for leaflet
+##Plot predictions on raster
+idx.pred <- inla.stack.index(joint.stk,'pred')$data
+
+pred_mean <- pp.res.j$summary.fitted.values[idx.pred,"mean"]
+pred_map <- rasterize(x = coop, y = raster4pred, field = pred_mean, fun = mean)
+
+pred_map <- projectRaster(pred_map, crs = CRS("+proj=longlat +datum=WGS84"))
+min(pred_map)
+pal <- colorNumeric("viridis", domain = c(0,0.2), na.color = "transparent")
+
+plot8 <-plot_dng1 %>%
+  addRasterImage(pred_map, colors = pal, opacity = 0.8) %>%
+  addScaleBar(position = c("bottomleft"))%>%
+  leaflet::addLegend("bottomright",
+                     pal = pal,
+                     values = seq(0,0.2,by = 0.01))
+
+frameWidget(plot8, width = "100%", height = "500")
+
+pred_sd = pp.res.j$summary.fitted.values[idx.pred,"sd"]
+pred_map <- rasterize(x = coop, y = raster4pred, field = pred_sd, fun = mean)
+
+pred_map <- projectRaster(pred_map, crs = CRS("+proj=longlat +datum=WGS84"))
+pal <- colorNumeric("viridis", c(0.01,0.2), na.color = "transparent")
+
+plot9 <- plot_dng1 %>%
+  addRasterImage(pred_map, colors = pal, opacity = 0.8) %>%
+  addScaleBar(position = c("bottomleft"))%>%
+  leaflet::addLegend("bottomright",
+                     pal = pal,
+                     values = seq(0.01,0.2, by = 0.01))
+
+frameWidget(plot9, width = "100%", height = "500")
+```
+
+
+```{r}
+pred_sd = pp.res.j$summary.fitted.values[idx.pred,"sd"]
+pred_map <- rasterize(x = coop, y = raster4pred, field = pred_sd, fun = mean)
+
+pred_map <- projectRaster(pred_map, crs = CRS("+proj=longlat +datum=WGS84"))
+pal <- colorNumeric("viridis", c(0.01,0.2), na.color = "transparent")
+
+plot_pred.map2 <- plot_dng1 %>%
+  addRasterImage(pred_map, colors = pal, opacity = 0.8) %>%
+  addScaleBar(position = c("bottomleft"))%>%
+  leaflet::addLegend("bottomright",
+                     pal = pal,
+                     values = seq(0.01,1, by = 0.01))
+
+frameWidget(plot_pred.map2, width = "100%", height = "500")
+
+
+```
+############
+############
+###########
+JANET'S VARIATION FOR PREDICTED VALUES
+
+
+
+```{r 13}
+# According to Janet's line 219, copyJ_w_useful.R file
+# to try fix the part that it gets stuck (spoiler it took a fucking long time too)
+raster4pred_ <- aggregate(raster_allholes, fact = 2, fun = mean)
+raster4pred <- projectRaster(raster4pred_, crs = CRS("+proj=utm +zone=39 ellps=WGS84 +units=km"))
+dp <- rasterToPoints(raster4pred)
+coop <- dp[, c("x", "y")]
+
+Ap <- inla.spde.make.A(mesh_kmD, loc = coop)
+A.pred <- rbind(imat, Ap)
+
+#Stack for prediction at mesh nodes
+stk.pred <- inla.stack(
+  data = list(y = NA, e = 0),
+  A = list(A.pred, 1),
+  effects =list(list(i = 1:mesh_kmD$n), list(b0 = rep(1, nrow(dp)+nv))),
+  tag = 'pred')
+
+joint.stk <- inla.stack(stk.pp, stk.pred)
+
+form.barrier <- y ~ 0 + b0 + f(i, model = barrier.model)
+pp.res.j <- inla(form.barrier,
+                 data = inla.stack.data(joint.stk),
+                 family = 'poisson', 
+                 control.predictor = list(A = inla.stack.A(joint.stk), link = 1), 
+                 E = inla.stack.data(joint.stk)$e, 
+                 inla.mode = "experimental")
+summary(pp.res.j)
+```
+
+
+```{r 13}
+plot(pp.res.j, plot.prior = TRUE)
+plot(inla.tmarginal(function(x){exp(x)}, pp.res.j$marginals.hyperpar$`Theta1 for i`),
+       type = "l", main = "Posterior for marginal SD")
+plot(inla.tmarginal(function(x){exp(x)}, pp.res.j$marginals.hyperpar$`Theta2 for i`),
+       type = "l", main = "Posterior for range")
+```
+
+
+```{r 13}
+pp.res.pp <- inla(form.barrier, 
+               data = inla.stack.data(stk.pp), 
+               family = 'poisson', 
+               control.predictor = list(A = inla.stack.A(stk.pp), link = 1), 
+               E = inla.stack.data(stk.pp)$e,
+               inla.mode = "experimental")
+
+summary(pp.res.pp)
+```
+
+```{r 13}
+poly.water <- sp_seaNA
+local.plot.fieldpp(field = pp.res.j$summary.random$i$mean, 
+                  mesh = mesh_kmD,
+                  poly.water = poly.water,
+                  main = "", 
+                  zlim = c(-3,4))
+plot(poly.barrier, add=T, col='grey', main = '')
+points(cords_Dng.sp[1:n,], pch = 16, cex = 0.5)
+title(main = 'Spatial field')
+
+local.plot.fieldpp(pp.res.j$summary.random$i$sd, 
+                   mesh_kmD,
+                   poly.water,
+                   main = "", 
+                   zlim = c(1.5,2.6))
+plot(poly.barrier, add=T, col='grey', main = '')
+points(cords_Dng.sp[1:n,], pch = 16, cex = 0.5)
+title(main = 'SD of spatial field')
+```
+

@@ -1,0 +1,36 @@
+
+DATA
+
+```{r}
+# Data for all species from helicopter surveys.
+Data_allspp <- readRDS("RSP_survey_sightings.rds")
+# Data for DUGONG
+Data_spp7 <- Data_allspp %>% filter(sp_grp_nam == "spp7") # I did it for every species with the for loop below.
+# Data Incidental Sightings Dugongs
+Data_ISD <- readRDS("incidental_sightings_dugongs.rds")
+
+# Data for the 10 different species. 
+# The list number corresponds to sppID, e.g. species 7 is spp[[7]]
+spp_ <- 10
+spp <- list()
+for (s in 1:spp_) {
+  data <- Data_allspp %>% filter(sp_grp_nam == paste0("spp", as.character(s)))
+  spp[[s]] <- data
+}
+# e.g. species 7 is spp[[7]]
+spp[[7]]
+```
+
+
+ICONS 4 leaflet maps
+
+```{r}
+# https://www.flaticon.com/
+dng_icon <- "icons/dugong.png"
+shrk_icon <- "icons/shark.png"
+dlph_icon <- "icons/dolphin.png"
+ray_icon <- "icons/ray.png"
+tle_icon <- "icons/turtle.png"
+```
+
+

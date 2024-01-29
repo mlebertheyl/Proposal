@@ -1,0 +1,5 @@
+book_filename: "bookdown-demo"
+language:
+  ui:
+    chapter_name: "Project "
+delete_merged_file: true

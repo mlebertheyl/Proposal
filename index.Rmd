@@ -1,0 +1,32 @@
+--- 
+title: "Proposal Defense for Ph.D. Degree"
+site: bookdown::bookdown_site
+output: bookdown::gitbook
+documentclass: book
+bibliography: [book.bib, packages.bib, Library.bib]
+biblio-style: apalike
+link-citations: yes
+description: ""
+---
+
+
+```{r, include=FALSE}
+library(citr)
+library(magick)
+```
+
+
+
+# A non-stationary spatial distribution model, and its application in marine megafauna {-}
+
+
+```{r, echo=FALSE, out.width="150%"}
+image_read("init.png")
+```
+
+## Abstract {-}
+
+Traditional spatial statistics rely on stationary models like the Matérn field, but they can’t smooth over features such as boundaries, holes, or physical barriers. For such cases @bakka_non-stationary_2019 proposed the Barrier model as a solution which differs from established methods in the sense that it doesn’t rely on the shortest distance between two points for the construction of the covariance matrix function. The Barrier model is based on interpreting the Matérn correlation as a collection of paths through a Simultaneous Autoregressive (SAR) model, manipulating local dependencies to cut off paths crossing physical barriers and formulated as a stochastic partial differential equation (SPDE) for well-behaved discretization. However, only a permanent physically impermeable barrier is considered in the model. This turns out to be quite restrictive since some barriers tend to have some degree of transparency instead of being permanently impermeable. So a Transparent Barrier model is proposed when barriers with different transparency levels need to be included in the same model. To illustrate this, one can think of some fish that leaves in shallow sea waters. An impermeable barrier would be a set of islands where there is no scenario in which fishes go over it- we refer to this as 0 transparency later on -. However, there might be sand patches with varying water coverage depending on the tide. These sand patches cannot be considered permanently impermeable barriers as fishes will be present, but will do so less often than in the normal non barrier area. Then, there is the need of counting with a model that can include both barriers (or as many barriers as needed) and their transparency level as some parameter in the model. Moreover barrier complex barrier scenarios are encountered  quite often in real-life so we will present several (real) examples in marine a megafauna species distribution modeling context.
+
+The main advantage of the Transparent Barrier model is it can handle spatial structures with complex barriers of different nature while keeping the computational efficiency of the classic stationary models.
+

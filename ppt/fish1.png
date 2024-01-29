@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html id="iex_layout_g_collection" xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <base target="_top" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="Description" content="Water Fish Icon - G-Collection - 1768 icons in a cutting edge colorful flat style." />
+    <meta name="Copyright" content="Copyright 2003-2024 by INCORS GmbH" />
+    <meta name="Keywords" content="icons, flat icons, colored icons, material design icons" />
+    <!--<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE7" />-->
+    <title>IconExperience &raquo; G-Collection &raquo; Water Fish Icon</title>
+
+    <!-- Global Site Tag (gtag.js) - Google Analytics -->
+      <!--
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-570876-1"></script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-570876-1', 'auto');
+      ga('set', 'anonymizeIp', true);
+      ga('send', 'pageview');
+    </script>
+      -->
+      <!--
+    <script>
+        var WebFontConfig = {
+            google: {
+                families: [ 'Roboto:400,300,500,700', 'Roboto Mono' ]
+            },
+            timeout: 3000
+        };
+
+        (function(d) {
+            var wf = d.createElement('script'), s = d.scripts[0];;
+            wf.src = 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js';
+            wf.async = true;
+            s.parentNode.insertBefore(wf, s);
+        })(document);
+    </script>
+      -->
+    <!--
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700,400italic,500italic,700italic,300italic%7CRoboto+Mono' rel='stylesheet' type='text/css'>
+  -->
+
+    <link rel="icon" href="https://d1nhio0ox7pgb.cloudfront.net/_img/favicon_g.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="https://d1nhio0ox7pgb.cloudfront.net/_img/favicon_g.ico" type="image/x-icon" />
+
+    <script type="text/javascript" src="https://d1nhio0ox7pgb.cloudfront.net/_scripts/jquery/jquery.min.js?v="></script>
+    <script type="text/javascript" src="https://d1nhio0ox7pgb.cloudfront.net/_scripts/jquery/jquery.colorbox-min.js?v="></script>
+    <script type="text/javascript" src="https://d1nhio0ox7pgb.cloudfront.net/_scripts/jquery.incors.background_scroll.js?v="></script>
+    <script type="text/javascript" src="https://d1nhio0ox7pgb.cloudfront.net/_scripts/jquery.incors.menu.js?v="></script>
+
+    <link rel="stylesheet" type="text/css" href="https://d1nhio0ox7pgb.cloudfront.net/_styles/colorbox.css?v=" />
+    <link rel="stylesheet" type="text/css" href="https://d1nhio0ox7pgb.cloudfront.net/_styles/icon_experience.css?v=" />
+    <link rel="stylesheet" type="text/css" href="https://d1nhio0ox7pgb.cloudfront.net/_styles/icon_experience_en.css?=" />
+    <link rel="stylesheet" type="text/css" href="https://d1nhio0ox7pgb.cloudfront.net/_styles/g_collection.css?v=" />
+    
+  </head>
+  <body>
+    <script>backgroundScrollStart();</script>
+    <div id="abs_cont"></div>
+    <!-- container -->
+    <table style="width: 100%; table-layout: fixed;">
+      <colgroup>
+        <col style="width: 50%;"/>
+        <col style="width: 5px:"/>
+        <col style="width: 950px;"/>
+        <col style="width: 5px;"/>
+        <col style="width: 50%;"/>
+      </colgroup>
+      <tr>
+        <td style="width: 50%;"></td>
+        <td style="width: 5px;"></td>
+        <td style="width: 950px; vertical-align: top;">
+          <!-- header -->
+          <div class="main_header" style="position: relative;">
+            <a id="iex_icon_experience_logo" href="/" style="background: url(https://d1nhio0ox7pgb.cloudfront.net/_img/logos2.png) no-repeat 0 0; left: 0;">
+              <div></div>professional icons
+            </a>
+            <div style="position: absolute; right: 0; top: 10px;">
+              <form action="/g_collection/search/" method="get">
+                <div style="width: 399px; height: 33px; position: relative;">
+                  <input name="q" style="position: absolute; left: 0; top: 0; border: 1px solid #ccc; color: #333; width: 260px; height: 27px; font-size: 18px; line-height: 27px; padding: 0 5px;" type="text" />
+                  <input style="position: absolute; right: 0; top: 0; width: 119px;" class="button button_g_red" type="submit" value="Search Icons" />
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div id="menu_collection_preview_container"></div>
+
+          <!-- menu -->
+          <div style="height: 53px;">
+            <div class="iex_menu">
+              <a class="iex_menu_item iex_menu_item_m_collection" href="/m_collection/"><span>M-Collection</span></a>
+              <a class="iex_menu_item iex_menu_item_v_collection" href="/v_collection/"><span>V-Collection</span></a>
+              <a class="iex_menu_item iex_menu_item_i_collection" href="/i_collection/"><span>I-Collection</span></a>
+              <a class="iex_menu_item iex_menu_item_o_collection" href="/o_collection/"><span>O-Collection</span></a>
+              <a class="iex_menu_item iex_menu_item_g_collection_selected" href="/g_collection/"><span>G-Collection</span></a>
+            </div>
+            <div style="clear: both;"></div>
+
+            <div style="position: relative; width: 950px; height: 30px; background: #00796B;">
+              <div id="iex_menu_sub_icons">
+  <ul class="iex_menu_sub">
+    <li class="iex_menu_sub_item iex_menu_sub_item_not_selected"><a href="/g_collection/">Overview</a></li><li class="iex_menu_sub_item iex_menu_sub_item_not_selected"><a href="/g_collection/icons/">Icons</a></li><li class="iex_menu_sub_item iex_menu_sub_item_not_selected"><a href="/g_collection/search/">Search</a></li><li class="iex_menu_sub_item iex_menu_sub_item_not_selected"><a href="/g_collection/facts/">Facts</a></li><li class="iex_menu_sub_item iex_menu_sub_item_not_selected"><a href="/g_collection/toolbox/">Toolbox</a></li><li class="iex_menu_sub_item iex_menu_sub_item_not_selected"><a href="/g_collection/license/">License</a></li><li class="iex_menu_sub_item iex_menu_sub_item_not_selected"><a href="/g_collection/faq/">FAQ</a></li>
+  </ul>
+  <a href="/g_collection/purchase/" class="iex_buy_menu_sub iex_buy_menu_sub_currency_USD">Buy G-Collection for US$ 89</a>
+</div>
+            </div>
+          </div>
+
+          <div style="background: #fff;">
+            <!-- content -->
+            <div>
+              <div id="alert"></div>
+              
+<div id="icon_preview" class="style_standard">
+  <table style="table-layout: fixed; width: 950px;">
+    <colgroup>
+      <col style="width: 644px;" />
+      <col style="width: 306px;" />
+    </colgroup>
+    <tr>
+      <td colspan="2" id="icon_other_styles" style="text-align: center;">
+        <div class="style_img style_img_standard" data-style="standard"><div class="style_img_wrapped">standard style</div></div>
+        <div class="style_img style_img_blue" data-style="blue"><div class="style_img_wrapped">blue style</div></div>
+        <div class="style_img style_img_gradient" data-style="gradient"><div class="style_img_wrapped">gradient style</div></div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 644px; vertical-align: top;">
+        <h1 style="font-size: 30px; margin: 0; padding: 10px 10px 0 10px;">Water Fish Icon</h1>
+        <div style="float: left; padding: 0 20px 10px 10px; font-size: 16px;">One of 1768 icons of the G-Collection<span style="font-size: 20px;">&nbsp;</span></div>
+        <!--<div style="text-align: right; padding: 0 5px 0;"><a class="underline_link" href="/g_collection/icons/" style="font-size: 20px;">Show all Icons</a></div>-->
+        <div style="clear: both;"></div>
+      </td>
+      <td style="vertical-align: bottom; padding: 15px;">
+        <div style="text-align: right;"><a class="underline_link" href="/g_collection/icons/" style="font-size: 20px;">Show all Icons</a></div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 0 0 0 10px; vertical-align: top;"><table class="icon_all_sizes_table" style="border-spacing: 1px;">
+          <tr>
+            <td>
+              <img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/16x16/water_fish.png" title="Water Fish Icon 16x16" alt="Water Fish Icon 16x16" width="16" height="16" style="margin: 0 5px 0 0;" />
+              <div class="icon_pixel_size_text">16x16</div>
+            </td>
+            <td>
+              <img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/32x32/water_fish.png" title="Water Fish Icon 32x32" alt="Water Fish Icon 32x32" width="32" height="32" style="margin: 0 5px 0 0;" />
+              <div class="icon_pixel_size_text">32x32</div>
+            </td>
+            <td>
+              <img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/64x64/water_fish.png" title="Water Fish Icon 64x64" alt="Water Fish Icon 64x64" width="64" height="64" style="margin: 0 5px 0 0;" />
+              <div class="icon_pixel_size_text">64x64</div>
+            </td>
+            <td rowspan="2">
+              <img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/256x256/water_fish.png" title="Water Fish Icon 256x256" alt="Water Fish Icon 256x256" width="256" height="256" style="margin: 0;" />
+              <div class="icon_pixel_size_text">256x256</div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/24x24/water_fish.png" title="Water Fish Icon 24x24" alt="Water Fish Icon 24x24" width="24" height="24" style="margin: 0 5px 0 0;" />
+                <div class="icon_pixel_size_text">24x24</div>
+            </td>
+            <td>
+              <img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/water_fish.png" title="Water Fish Icon 48x48" alt="Water Fish Icon 48x48" width="48" height="48" style="margin: 0 5px 0 0;" />
+                <div class="icon_pixel_size_text">48x48</div>
+            </td>
+            <td>
+              <img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/128x128/water_fish.png" title="Water Fish Icon 128x128" alt="Water Fish Icon 128x128" width="128" height="128" style="margin: 0 5px 0 0;" />
+                <div class="icon_pixel_size_text">128x128</div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Purchase Reminder -->
+        <div style="border: 1px solid #aaa; border-top: 20px solid #3a7a6c; box-sizing: border-box;
+          margin: 20px 0; padding: 20px 0 20px; text-align: center; font-size: 18px;">
+          <div style="color: #46b49f; font-weight: 500; font-size: 28px;">
+            1768 Icons for US$ 89
+          </div>
+          <div style="text-align: left; padding: 0px 10px 10px 20px; font-weight: 400; line-height: 26px;">
+            <ul>
+              <li>Consistent icon style</li>
+              <li>3 styles, as vector (SVG) and 8 bitmap sizes (PNG)</li>
+              <li>Transparent background and no watermark</li>
+              <li>Download immediately, including local icon search</li>
+              <li>One purchase to use icons forever. No subscription, no hidden fees</li>
+            </ul>
+          </div>
+          <div>
+            <a id="link_ad_purchase" style="background-color: #e8552b; margin: 0 20px 0 0;" class="iex_material_button" href="/g_collection/">Go to G-Collection</a>
+            <a id="link_ad_purchase" style="background-color: #e8552b" class="iex_material_button" href="/g_collection/purchase/">Purchase for US$ 89</a>
+          </div>
+        </div>
+
+        <table class="icon_all_sizes_table" style="border-spacing: 1px;">
+          <tr>
+            <td colspan="4">
+              <figure>
+                <img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/512x512/water_fish.png" title="Water Fish Icon" alt="Water Fish Icon" width="512" height="512" style="margin: 0 5px 0 0;" />
+                <figcaption>Water Fish Icon</figcaption>
+              </figure>
+              <div class="icon_pixel_size_text">512x512</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td style="vertical-align: top;">
+        <div style="margin: 2px 10px 10px;">
+          <div style="padding: 0 0 20px 0;">
+            <h3>Related Icons:</h3>
+            <div id="icon_related_icons" style="margin: 0 -20px 0 0;">
+              <div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=goldfish&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/goldfish.png" width="48" height="48" alt="Goldfish Icon" title="Goldfish Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=water&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/water.png" width="48" height="48" alt="Water Icon" title="Water Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=diving_mask&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/diving_mask.png" width="48" height="48" alt="Diving Mask Icon" title="Diving Mask Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=fish_bowl&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/fish_bowl.png" width="48" height="48" alt="Fish Bowl Icon" title="Fish Bowl Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=submarine&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/submarine.png" width="48" height="48" alt="Submarine Icon" title="Submarine Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=blot&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/blot.png" width="48" height="48" alt="Blot Icon" title="Blot Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=bridge&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/bridge.png" width="48" height="48" alt="Bridge Icon" title="Bridge Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=buoy&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/buoy.png" width="48" height="48" alt="Buoy Icon" title="Buoy Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=drop&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/drop.png" width="48" height="48" alt="Drop Icon" title="Drop Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=dug_well&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/dug_well.png" width="48" height="48" alt="Dug Well Icon" title="Dug Well Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=fire_hydrant&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/fire_hydrant.png" width="48" height="48" alt="Fire Hydrant Icon" title="Fire Hydrant Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=hand_pump&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/hand_pump.png" width="48" height="48" alt="Hand Pump Icon" title="Hand Pump Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=home_water&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/home_water.png" width="48" height="48" alt="Home Water Icon" title="Home Water Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=lifebelt&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/lifebelt.png" width="48" height="48" alt="Lifebelt Icon" title="Lifebelt Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=molecule_h2o&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/molecule_h2o.png" width="48" height="48" alt="Molecule H 2o Icon" title="Molecule H 2o Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=pet_bottle&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/pet_bottle.png" width="48" height="48" alt="Pet Bottle Icon" title="Pet Bottle Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=pipeline&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/pipeline.png" width="48" height="48" alt="Pipeline Icon" title="Pipeline Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=rain_drops&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/rain_drops.png" width="48" height="48" alt="Rain Drops Icon" title="Rain Drops Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=ships_wheel&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/ships_wheel.png" width="48" height="48" alt="Ships Wheel Icon" title="Ships Wheel Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=water_tap&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/water_tap.png" width="48" height="48" alt="Water Tap Icon" title="Water Tap Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=watering_can&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/watering_can.png" width="48" height="48" alt="Watering Can Icon" title="Watering Can Icon" /></a>
+      </div>
+    </div><div class="icons_related_icons">
+      <div>
+        <a class="icons_related_icon_link" href="/g_collection/icons/?icon=watering_can_half&amp;style=standard"><img class="icon_preview" src="https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/48x48/watering_can_half.png" width="48" height="48" alt="Watering Can Half Icon" title="Watering Can Half Icon" /></a>
+      </div>
+    </div>
+              <div style="clear: both;"></div>
+            </div>
+            <div style="clear: both;"></div>
+            
+          </div>
+          <div>
+            <h3>Keywords:</h3>
+            <div style="">
+              fish, ocean, sea, swim, water, waves
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+  <script>
+    var showMoreRelatedIcons = function() {
+      $("#icon_related_icons").load("?icon=water_fish&show_more=true");
+      $("#icon_show_more").hide();
+    };
+  </script>
+
+  <script>
+    $(document).ready(function() {
+      var style = "standard";
+
+      var changeStyle = function(style) {
+        $("#icon_preview").attr( "class", "style_" + style);
+      };
+
+      $(".style_img > div").click(function(event) {
+        var oldStyle = style;
+        style = $(event.target).parent().attr("data-style");
+        changeStyle(style);
+        $("img.icon_preview").each(function() {
+          this.src = this.src.replace(oldStyle, style);
+        });
+
+        $("a.icons_related_icon_link").each(function() {
+          this.href = this.href.replace(oldStyle, style);
+        });
+      });
+
+      $("#icon_show_more").click(function() {
+        $("#icon_related_icons").load("?icon=water_fish&show_more=true&amp;style=" + style);
+        $("#icon_show_more").hide();
+      });
+    });
+  </script>
+
+            </div>
+
+            <!-- footer -->
+            <div style="height: 10px;"></div>
+            <div id="iex_footer_line"></div>
+            <div id="iex_footer">
+              <table style="position: absolute; right: 0; height: 41px; float: right;">
+                <tr>
+                  <td style="width: 50px; padding: 3px 0;">
+                    <div>
+                      <a href="http://www.incors.com" style="display:block; width: 55px; height: 36px; background: url(https://d1nhio0ox7pgb.cloudfront.net/_img/logos2.png) no-repeat -364px 0;"></a>
+                    </div>
+                  </td>
+                  <td style="line-height: 41px; vertical-align: center; padding: 0 10px;"><span style="white-space: nowrap;">&copy; Copyright 2024</span></td>
+                </tr>
+              </table>
+              <div style="text-align: center; line-height: 41px; vertical-align: center;"><a href="http://www.incors.com/info/">Company</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.incors.com/contact/">Imprint</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.incors.com/legal/">Legal</a></div>
+            </div>
+          </div>
+        </td>
+        <td style="width: 5px;"></td>
+        <td style="width: 50%;"></td>
+      </tr>
+    </table>
+
+  </body>
+</html>

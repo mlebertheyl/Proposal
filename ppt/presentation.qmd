@@ -1,0 +1,746 @@
+---
+title: ""
+title-slide-attributes:
+  data-background-size: contain
+  data-background-opacity: "1"
+format: revealjs
+smaller: true
+scrollable: true
+logo: icons/dugong.png
+editor: visual
+---
+
+```{r, include=FALSE}
+library(citr)
+library(magick)
+```
+
+```{r}
+image_read("pp.png")
+```
+
+```{r}
+big_dugong <- image_read("icons/dugong.png")
+image_write(big_dugong, path = "final.png", format = "png")
+```
+
+
+
+## Motivation
+
+##
+
+### The Saudi Arabian Red Sea coast
+
+```{r, include = FALSE}
+# https://www.flaticon.com/
+dng_icon <- "icons/dugong.png"
+shrk_icon <- "icons/shark.png"
+dlph_icon <- "icons/dolphin.png"
+ray_icon <- "icons/ray.png"
+tle_icon <- "icons/turtle.png"
+```
+
+```{r, include = FALSE}
+library(leaflet)
+library(leafpop)
+library(leaflet.extras)
+library(htmltools)
+library(sf)
+library(tidyverse)
+library(rnaturalearth)
+library(lattice)
+library(htmlwidgets)
+library(widgetframe)
+library(shiny)
+library(sp)
+library(mapdata)
+library(maptools)
+library(rgeos)
+library(raster)
+library(terra)
+require(devtools)
+library(fields)
+library(terra)
+library(ggplot2)
+library(scales)
+```
+
+```{r, include = FALSE}
+# from chunk 1 and 2 in "mybath_explore"
+# from chunk 1:
+# load data w/ raster lib
+bathym_ <- raster("RSPbathym100m.tif")
+crs_longlat <- CRS("+proj=longlat +datum=WGS84")
+crs_km <- CRS("+proj=utm +zone=39 ellps=WGS84 +units=km")
+bathym_longlat <- projectRaster(bathym_, crs = crs_longlat)
+bathym_km <- projectRaster(bathym_, crs = crs_km)
+# creating polygons with terra
+bathym <- terra::rast(bathym_longlat)
+```
+
+```{r, include = FALSE}
+# Data for all species from helicopter surveys.
+Data_allspp <- readRDS("RSP_survey_sightings.rds")
+# Data for DUGONG
+Data_spp7 <- Data_allspp %>% filter(sp_grp_nam == "spp7") # I did it for every species with the for loop below.
+# Data Incidental Sightings Dugongs
+Data_ISD <- readRDS("incidental_sightings_dugongs.rds")
+
+# Data for the 10 different species. 
+# The list number corresponds to sppID, e.g. species 7 is spp[[7]]
+spp_ <- 10
+spp <- list()
+for (s in 1:spp_) {
+  data <- Data_allspp %>% filter(sp_grp_nam == paste0("spp", as.character(s)))
+  spp[[s]] <- data
+}
+# e.g. species 7 is spp[[7]]
+spp[[7]]
+
+# RUN myData, and generic functions FIRST
+# Data for all species from helicopter surveys.
+# Data_allspp <- readRDS("RSP_survey_sightings.rds")
+# Data for DUGONG
+# Data Incidental Sightings Dugongs
+# Data_ISD <- readRDS("incidental_sightings_dugongs.rds")
+
+Data_7spp <- spp[[7]]
+
+# bind ISD with Survey helicopter data
+# Dugong is the only one that has data coming from 2 sources.
+Data_ISD_ <-dplyr::select(Data_ISD, c(Lat, Long, geometry)) %>% 
+  rename(lat = Lat, long = Long) %>% 
+  mutate(method = "ISD")
+```
+
+```{r, include = FALSE}
+spp7 <- dplyr::select(Data_7spp, c(lat, long, geometry)) %>% 
+  mutate(method = "Survey")
+all_dugong <- rbind(Data_ISD_, spp7)
+st_crs(Data_ISD_)
+Data_ISD <- st_transform(Data_ISD_, crs_km)
+cords_Dng.xy <- st_coordinates(Data_ISD)
+cords_Dng.sp <- SpatialPoints(cords_Dng.xy, proj4string = crs_km)
+```
+
+```{r, echo=FALSE}
+#plot1
+leaflet() %>% 
+  setView(lng = median(Data_ISD$long), lat = median(Data_ISD$lat), zoom = 8) %>%
+  addProviderTiles(providers$OpenStreetMap, group = "Open Street Map") %>% 
+  # Add additional basemap layers
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI World Imagery") %>% 
+  addProviderTiles(providers$Esri.OceanBasemap, group = "ESRI Ocean Basemap") %>% 
+  # Add a User-Interface (UI) control to switch layers
+  addLayersControl(
+    baseGroups = c("Open Street Map","ESRI World Imagery","ESRI Ocean Basemap"),
+    options = layersControlOptions(collapsed = FALSE))
+```
+
+## with Dugon sightings
+
+```{r}
+#plot_dng1
+leaflet() %>% 
+  setView(lng = mean(Data_ISD$long), lat = mean(Data_ISD$lat), zoom = 8) %>%
+  addProviderTiles(providers$OpenStreetMap, group = "Open Street Map") %>% 
+  # Add additional basemap layers
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI World Imagery") %>% 
+  addProviderTiles(providers$Esri.OceanBasemap, group = "ESRI Ocean Basemap") %>% 
+  # Add a User-Interface (UI) control to switch layers
+  addLayersControl(
+    baseGroups = c("Open Street Map","ESRI World Imagery","ESRI Ocean Basemap"),
+    options = layersControlOptions(collapsed = FALSE)) %>%
+  addMarkers(lng = Data_ISD$long, lat = Data_ISD$lat, group = "Dugong",
+             icon = 
+               list(iconUrl = dng_icon,
+                    iconSize = c(20,20)))
+
+```
+
+## with available map data
+
+```{r, include = FALSE}
+#Red sea geometry
+map <- map("world", c("Saudi Arabia","Egypt", "Jordan","Eritrea", "Sudan", "Yemen"), 
+           fill = TRUE,
+           col = "transparent", plot = FALSE)
+IDs <- sapply(strsplit(map$names, ":"), function(x) x[1])
+map.sp <- map2SpatialPolygons(
+  map, IDs = IDs,
+  proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+
+pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
+  cbind(c(43, 38, 30, 35), 
+        c(17, 16, 30, 30)),
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp)))
+
+poly.RS <- gDifference(pl.sel, map.sp)
+```
+
+
+```{r}
+leaflet() %>% 
+  setView(lng = mean(Data_ISD$long), lat = mean(Data_ISD$lat), zoom = 8) %>%
+  addProviderTiles(providers$OpenStreetMap, group = "Open Street Map") %>% 
+  # Add additional basemap layers
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI World Imagery") %>% 
+  addProviderTiles(providers$Esri.OceanBasemap, group = "ESRI Ocean Basemap") %>% 
+  # Add a User-Interface (UI) control to switch layers
+  addLayersControl(
+    baseGroups = c("Open Street Map","ESRI World Imagery","ESRI Ocean Basemap"),
+    options = layersControlOptions(collapsed = FALSE)) %>%
+  addMarkers(lng = Data_ISD$long, lat = Data_ISD$lat, group = "Dugong",
+             icon = 
+               list(iconUrl = dng_icon,
+                    iconSize = c(20,20))) %>% 
+  addPolygons(data = poly.RS,
+            group = "Red Sea",
+            color = "blue",
+            weight = 3)
+```
+
+## Bathymetry maps
+
+```{r bathym02, echo=FALSE, fig.cap="Bathymetry map for the the entire study area (top left); the area excluding islands (top right); the islands (bottom left); and an area we don't know how to clasify (bottom right)."}
+c1 <- image_read("dng_plots/plotbathym.png")
+c2 <- image_read("dng_plots/plotbtathym_landNA.png")
+img <- c(c1, c2)
+img1 <- image_append(img)
+
+c3 <- image_read("dng_plots/plotbtathym_land0.png")
+c4 <- image_read("dng_plots/plotbtathym_sand3to0.png")
+img <- c(c3, c4)
+img2 <- image_append(img)
+
+img <- c(img1,img2)
+image_append(img, stack = TRUE)
+```
+
+
+# Project 1: Transparent Barrier model
+
+
+## Motivation
+
++ Spatial Gaussian fields (SGFs) are typically assumed have stationarity, implying that the model component remains unchanged when the underlying map is moved or rotated.
+
++  In the presence of physical barriers or holes in the study area, challenging the assumption that changing the map’s position or orientation shouldn’t affect the model
+
++ There is more than just an *imperemeable* barrier.
+
+```{r, echo=FALSE, fig.cap="Bathymetry map for the the entire study area (top left); the area excluding islands (top right); the islands (bottom left); and an area we don't know how to clasify (bottom right)."}
+c1 <- image_read("dng_plots/plotbathym.png")
+c2 <- image_read("dng_plots/plotbtathym_landNA.png")
+img <- c(c1, c2)
+img1 <- image_append(img)
+
+c3 <- image_read("dng_plots/plotbtathym_land0.png")
+c4 <- image_read("dng_plots/plotbtathym_sand3to0.png")
+img <- c(c3, c4)
+img2 <- image_append(img)
+
+img <- c(img1,img2)
+image_append(img, stack = TRUE)
+```
+
+
+## Background 
+
++ Spatial Gaussian fields (SGFs) are typically assumed to be stationary and isotropic.
+
++ Traditional spatial statistics rely on stationary models, but they can't smooth over features such as boundaries, holes, or physical barriers. 
+
+
++ The Barrier model proposed by Bakka et al. (2019) as a solution which differs from established methods in the sense that it doesn't rely on the shortest distance between two points for the construction of the covariance matrix function. 
+
++ The Barrier model is based on interpreting the Matérn correlation as a collection of paths through a Simultaneous Autoregressive (SAR) model, manipulating local dependencies to cut off paths crossing physical barriers and formulated as a stochastic partial differential equation (SPDE) for well-behaved discretization.
+
+
+## more on the Barrier model...
+
+To start with, the re-parametrization of the Matérn covariance function introduces an $r$ parameter, which we will need in the Transparent Barrier model framework too.
+
+Let the following be Matérn covariance function,
+
+$$Cov\left(x(s_i), x(s_j)\right)=\sigma_x^2\left(d\sqrt{8 \nu} / \rho\right) K_\nu\left(d\sqrt{8 \nu} / \rho\right)$$ where $d = ||s_i-s_j||$ is the Euclidean distance between points $s_i$ and $s_j$, $\sigma_x^2$ is constant, $\nu$ is the smoothness parameter, $K_{\nu}$ is the modified Bessel function of the second kind and order $\nu>0$, and $\rho$ is the spatial distance at which correlation is approximately 0.1.
+Now, the re-parametrized Matérn covariance function is,
+
+$$Cov\left(x(s_i), x(s_j)\right)=\sigma_x^2 \left (\frac{d \sqrt{8}}{r}\right ) K_\nu \left (\frac{d \sqrt{8}}{r}\right )$$ where $r=\rho/\sqrt{8}$ is the range parameter. $r$ is constant and interpretable because the correlation between two points that are $r$ units apart is near $0.1$.
+
+The SPDE is also re-parametrized to get the following,
+
+$$x(s)-\nabla \cdot \frac{r^2}{8} \nabla x(s)=r \sqrt{\frac{\pi}{2}} \sigma_x \mathcal{W}(s)$$ where $x(s)$ the Gaussian field for $s \in \Omega \subseteq \mathbb{R}^2$, $\nabla=\left(\frac{\partial}{\partial x}, \frac{\partial}{\partial y}\right)$, and $\mathcal{W}(s)$ white noise.
+
+## ... and we introduce a different Matérn field for *normal* area and *barrier* area
+
+Both have the same $\sigma$ but different $r$. $r$ for the barrier area is close to $0$ to remove the correlation in this area. The following are SPDE representations for both Matérn field,
+
+$$\begin{aligned}
+& x(s)-\nabla \cdot \frac{r_n^2}{8} \nabla x(s)=r_n \sqrt{\frac{\pi}{2}} \sigma_x \mathcal{W}(s), \text { for } s \in \Omega_n \\
+& x(s)-\nabla \cdot \frac{r_b^2}{8} \nabla x(s)=r_b \sqrt{\frac{\pi}{2}} \sigma_x \mathcal{W}(s), \text { for } s \in \Omega_b,
+\end{aligned}$$
+
+where $r_n$ is the range parameter for the normal area, $r_b$ is the range parameter for the barrier area and its a fixed fraction of $r$ so that $r_b=r_n/h$, where $h$ is a constant (e.g. $10$). $\Omega_n$ the normal area, and $\Omega_b$ the barrier area. The disjoint union of both $\Omega_n$ and $\Omega_b$ gives the whole study area $\Omega$.
+
+## so, what's new?
+
+
++ Until now only *permanent physically impermeable* barriers have been considered. 
++ This turns out to be quite restrictive since some barriers tend to have some degree of transparency instead of being permanently impermeable.
++ Then, there is the need of counting with a model that can include both barriers and their specific transparency level as some parameter in the model.
++ We introduce a new *transparency* concept.
+
+## The fish example
+
+To illustrate this, one can think of some fish that leaves in shallow sea waters. An impermeable barrier would be a set of islands where there is no scenario in which fishes go over it *- we will refer to this as 0 transparency later on -*. However, there might be sand patches with varying water coverage depending on the tide. These sand patches cannot be considered *permanently impermeable* barriers as fishes will be present, but will do so less often than in the *normal* non barrier area.
+
+```{r}
+sh <- image_read("icons/shark.png")
+dlph<- image_read("icons/dolphin.png")
+ray <- image_read("icons/ray.png")
+tle <- image_read("icons/turtle.png")
+img <- c(sh, dlph, ray, tle)
+image_append(img)
+```
+
+
+
+## Transparent Barrier model 
+
+The approach comes directly from the barrier model. The difference is in thinking of the study area $\Omega$ not only as $\Omega_n$ and $\Omega_b$, but $\Omega_n$ and $\Omega_{b_{i}}$ with $i=1,...,l$ and $l$ the number of different transparency levels considered. Then the SPDE representations for the Matérn field for the normal area and the Matérn field for each barrier area with different transparency level,
+
+$$\begin{aligned}
+& x(s)-\nabla \cdot \frac{r_n^2}{8} \nabla x(s)=r_n \sqrt{\frac{\pi}{2}} \sigma_x \mathcal{W}(s), \text { for } s \in \Omega_n \\
+& x(s)-\nabla \cdot \frac{r_{b_1}^2}{8} \nabla x(s)=r_{b_1} \sqrt{\frac{\pi}{2}} \sigma_x \mathcal{W}(s), \text { for } s \in \Omega_{b_1} \\
+& x(s)-\nabla \cdot \frac{r_{b_2}^2}{8} \nabla x(s)=r_{b_2} \sqrt{\frac{\pi}{2}} \sigma_x \mathcal{W}(s), \text { for } s \in \Omega_{b_2}\\
+& \vdots\\
+& x(s)-\nabla \cdot \frac{r_{b_l}^2}{8} \nabla x(s)=r_{b_l} \sqrt{\frac{\pi}{2}} \sigma_x \mathcal{W}(s), \text { for } s \in \Omega_{b_l}
+\end{aligned}$$
+
+where $x(s)$ the Gaussian field, $\nabla=\left(\frac{\partial}{\partial x}, \frac{\partial}{\partial y}\right)$, and $\mathcal{W}(s)$ white noise. $r_n$ is the range parameter for the normal area, and $r_{b_1}$ to $r_{b_l}$ the range parameter for the barriers with different transparency level. Also $r_{b_i}=r_{n}/h_i$, where $h_i\geq1$ is a constant, and $i=1,...,l$. The restriction on $h$ comes from wanting any $r_b$ to be a fraction lower or equal than the normal range $r_n$, otherwise the correlation in the barrier area would be higher than in the non-barrier area.
+
+
+## Simulation geometries
+
+```{r squares, echo=FALSE, out.width="100%", fig.cap= "Delaunay triangulation for the different geometries used in simulations"}
+r <- magick::image_read("4proposal/mesh_s.png")
+# Width: 480px, height: 480px,
+# starting at +200px from the left and 300 from the top
+magick::image_crop(r, geometry = "480x480+000-300") 
+```
+Data is simulated under a specific barrier scenario and then estimation for the parameters is given by Transparent Barrier models and stationary models in order to compare both approaches. The simulated barrier scenarios comprehend a normal area, one barrier with transparency level  0 (permanently impermeable), and another barrier with varying level of transparency depending on the simulation. All models are fitted in INLA.
+
+
+The range parameter on the left polygon was $r_{b_1}$, and $r_{b_2}$ on the right polygon in every scenario. The barrier polygons will be referred as *left barrier* and  *right barrier* respectively. Moreover, priors are chosen arbitrarily, and INLA is run using a Gaussian likelihood. The model only takes an intercept and spatial effect $f$ (this was referred to as model component in the previous section).
+
+## Results for simulation 1
+
+```{r gifs4, echo=FALSE, fig.cap="Simulation scenario 1: row one shows the true simulated spatial field; row two and three the posterior mean for the transparent barrier model and the stationary model; and row four and five, the standard deviation for the transparent barrier model and the stationary model"}
+
+#"480x480+000-300")
+tf0.4 <- image_read("4proposal/width=c(0.4)sm=0.5/true.field.gif")
+img_r1 <- image_append(image_scale(tf0.4, "x400"))
+r1 <- image_crop(img_r1, "2000x400+000+33")
+
+ps_bm0.4 <- image_read("4proposal/width=c(0.4)sm=0.5/pos.mean.gif")
+ps_st0.4 <- image_read("4proposal/width=c(0.4)sm=0.5/stat.rnadom.mean.gif")
+
+#img_r2_ <- c(ps_bm0.4, ps_st0.4)
+#img_r2 <- image_append(image_scale(img_r2_, "x200"), stack = TRUE)
+
+sd_bm0.4 <- image_read("4proposal/width=c(0.4)sm=0.5/pos.sd.gif")
+sd_st0.4 <- image_read("4proposal/width=c(0.4)sm=0.5/pos.sd.st.gif")
+#img_r3_ <- c(sd_bm0.4, sd_st0.4)
+#img_r3 <- image_append(image_scale(img_r3_, "x200"))
+
+r2 <- image_append(image_scale(ps_bm0.4, "x400"))
+r2 <- image_crop(r2, "2000x400+000+33")
+
+r3 <- image_append(image_scale(ps_st0.4, "x400"))
+r3 <- image_crop(r3, "2000x400+000+33")
+
+r4 <- image_append(image_scale(sd_bm0.4, "x400"))
+r4 <- image_crop(r4, "2000x400+000+33")
+
+r5 <- image_append(image_scale(sd_st0.4, "x400"))
+r5 <- image_crop(r5, "2000x400+000+33")
+
+img <- c(r1,r2,r3,r4,r5)
+
+image_append(img, stack = TRUE)
+```
+
+
+
+## hyper-parameters summary
+
+```{r t1, echo =FALSE, warning=FALSE, message=FALSE}
+library(readr)
+df.4 <- read_csv("4proposal/4proposal\\trans.4.csv")
+r <- c("0.01", "~0.75", "~1.5", "~2.25", "3")
+knitr::kable(cbind(r, df.4[1:5,2:4]), caption = "summary of posterior range in the Transparent Barrier model for simulation geometry 1") %>% kableExtra::kable_paper("hover", full_width = F)
+```
+
+```{r t2, echo =FALSE, warning=FALSE, message=FALSE}
+knitr::kable(cbind(r, df.4[6:10,2:4]), caption = "summary of posterior range in the stationary model for simulation geometry 1")  %>% kableExtra::kable_paper("hover", full_width = F)
+```
+
+## more results for simulation 1...
+
+```{r circles4, out.width="50%", echo=FALSE, fig.cap="Correlation structure of the transparent Barrier model with respect to specific points for simulation scenario 1."}
+c1 <- image_read("4proposal/width=c(0.4)sm=0.5/corr.points1.png")
+c2 <- image_read("4proposal/width=c(0.4)sm=0.5/corr.points2.png")
+c1 <- image_crop(c1, "480x480+000+20")
+c2 <- image_crop(c2, "480x480+000-160")
+img <- c(c1,c2)
+image_append(img, stack = TRUE)
+```
+
+## what can we say about the range parameter...
+
+```{r pairs, echo=FALSE, fig.cap="Correlation curves between two points. The top left plot corresponds to simulation scenario 1; the top right to simulation scenario 2; the bottom left to the simulation scenario 3; and the bottom right to the simulation scenario 4. Pair 1, 2 and 3 correspond to locations taken in between barriers, on the edge of the right barrier or the middle of the right barrier, respectively. The dots in the plots correspond to the calculated correlation for a field with no barriers, i.e. where the range parameter is three everywhere."}
+
+tl <- image_read("4proposal/width=c(0.4)sm=0.5/corr_vs_r.c.png")
+tl <- image_crop(tl, "480x480+000+18")
+
+tr <- image_read("4proposal/width=c(2.5)sm=0.5/corr_vs_r.c.png")
+tr <- image_crop(tr, "480x480+000+18")
+
+top <- c(tl,tr)
+top <- image_append(top)
+
+bl <- image_read("4proposal/width=c(.4_2.5)sm=0.5/corr_vs_r.c.png")
+bl <- image_crop(bl, "480x480+000+18")
+
+br <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/corr_vs_r.c.png")
+br <- image_crop(br, "480x480+000+18")
+
+bot <- c(bl,br)
+bot <- image_append(bot)
+
+img <- c(top, bot)
+image_append(img, stack = TRUE)
+```
+
+## 
+
+```{r corr11, echo=FALSE, fig.cap="Correlation curves between two points. The top left plot corresponds to simulation scenario 1; the top right to simulation scenario 2; the bottom left to the simulation scenario 3; and the bottom right to the simulation scenario 4. PointID 1 to 11 correspond to locations starting at 5.5 (pointID = 1) on the x-axis of the area of simulation, until 7.5 (pointID = 11) on the x-axis of the area of simulation. The range parameter is re-scaled so that the values are between 0 and 1."}
+tl <- image_read("4proposal/width=c(0.4)sm=0.5/corr11.png")
+
+tr <- image_read("4proposal/width=c(2.5)sm=0.5/corr11.png")
+
+top <- c(tl,tr)
+top <- image_append(top)
+
+bl <- image_read("4proposal/width=c(.4_2.5)sm=0.5/corr11.png")
+
+br <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/corr11.png")
+
+bot <- c(bl,br)
+bot <- image_append(bot)
+
+img <- c(top, bot)
+image_append(img, stack = TRUE)
+```
+
+## what can we say about transparency...
+
+
+```{r trans11, echo=FALSE, fig.cap="Transparency curves. The top left plot corresponds to simulation scenario 1; the top right to simulation scenario 2; the bottom left to the simulation scenario 3; and the bottom right to the simulation scenario 4. PointID 1 to 11 correspond to locations starting at 5.5 (pointID = 1) on the x-axis of the area of simulation, until 7.5 (pointID = 11) on the x-axis of the area of simulation. The range parameter is re-scaled so that the values are between 0 and 1."}
+tl <- image_read("4proposal/width=c(0.4)sm=0.5/trans11.png")
+
+tr <- image_read("4proposal/width=c(2.5)sm=0.5/trans_curve11.png")
+
+top <- c(tl,tr)
+top <- image_append(top)
+
+bl <- image_read("4proposal/width=c(.4_2.5)sm=0.5/trans_curve11.png")
+
+br <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/trans11.png")
+
+bot <- c(bl,br)
+bot <- image_append(bot)
+
+img <- c(top, bot)
+image_append(img, stack = TRUE)
+```
+
+
+## Discussion and future work
+
++ The results show the proposed Transparent Barrier model can handle complex spatial structures with diverse barriers, retaining computational efficiency inherent in stationary models. 
+
++ We need more than an interpretation that relies on intuition for the parameters.
+
+```{r, out.width="500%"}
+image_read("timeline.png")
+```
+
+# Project 2: model application in marine megafauna
+
+## Motivation... going back to where we started
+
+```{r bathym0, echo=FALSE, fig.cap="Bathymetry map for the the entire study area (top left); the area excluding islands (top right); the islands (bottom left); and an area we don't know how to clasify (bottom right)."}
+c1 <- image_read("dng_plots/plotbathym.png")
+c2 <- image_read("dng_plots/plotbtathym_landNA.png")
+img <- c(c1, c2)
+img1 <- image_append(img)
+
+c3 <- image_read("dng_plots/plotbtathym_land0.png")
+c4 <- image_read("dng_plots/plotbtathym_sand3to0.png")
+img <- c(c3, c4)
+img2 <- image_append(img)
+
+img <- c(img1,img2)
+image_append(img, stack = TRUE)
+```
+
+## Barrier model
+
+The response variable is assumed to have a Poisson distribution with intensity $\lambda_A=\int_A \lambda(\mathbf{s}) d \mathbf{s}$, and $$\log (\lambda(\mathbf{s}))=\beta_0+u(\mathbf{s})$$, with $\beta_0$ the intercept and $u(\mathbf{s})$ the random effect.
+
+$$\begin{aligned}
+& x(s)-\nabla \cdot \frac{r_n^2}{8} \nabla x(s)=r_n \sqrt{\frac{\pi}{2}} \sigma_x \mathcal{W}(s), \text { for } s \in \Omega_n \\
+& x(s)-\nabla \cdot \frac{r_b^2}{8} \nabla x(s)=r_b \sqrt{\frac{\pi}{2}} \sigma_x \mathcal{W}(s), \text { for } s \in \Omega_b,
+\end{aligned}$$
+
+where $r_n$ is the range parameter for the sea area, $r_b$ is the range parameter for the island barrier area, $\Omega_n$ is the sea area, and $\Omega_b$ the island area. The disjoint union of both $\Omega_n$ and $\Omega_b$ gives the whole study area $\Omega$. More specifically, $r_n=10$, and $r_b=0.01$ are used.
+
+## The mesh
+
+```{r mesh, out.width="40%", echo=FALSE, fig.cap="Triangulation with observed locations in purple. Following the SPDE approach to fit an LGCP model the model is defined at mesh nodes. Expected number of events is proportional to the area around the node"}
+image_read("dng_plots/mesh.png")
+```
+
+## Results
+
+```{r, echo=FALSE, out.width="100%", fig.cap="Posterior distribution for the mean on the left, 0.025 quantile on the middle, and 0.025 quantile on the right."}
+i1 <- image_read("dng_plots/mean_spfield.png")
+i1 <- image_crop(i1, "480x480+000+40")
+i2 <- image_read("dng_plots/q025_spfield.png")
+i2 <- image_crop(i2, "480x480+000+40")
+i3 <- image_read("dng_plots/q0975_spfield.png")
+i3 <- image_crop(i3, "480x480+000+40")
+img <- c(i1,i2,i3)
+image_append(img)
+```
+
+Bayesian posterior distributions provide a straight forward way to make probability statements about unknown parameters so the region between 0.025 to 0.975 quantiles of the posterior distribution indicates a 95% probability that the unknown parameter lies within this range of values.
+
+##
+
+```{r fieldforpoint, echo=FALSE, out.width="70%", fig.cap="Correlation structure with respect to one point obtained with the Barrier model (top row) and the stationary model (bottom row) to compare the work done here and the alternative assuming stationarity."}
+a = image_read("dng_plots/field4point.png")
+b=image_read("dng_plots/field4pointzoom.png")
+c=image_read("dng_plots/bm_field.png")
+d=image_read("dng_plots/bm_fieldzoom.png")
+e <- c(a,b); f <-c(c,d)
+e=image_append(e)
+f=image_append(f)
+img <- c(f,e)
+image_append(img, stack = TRUE)
+
+```
+
+
+
+
+## Discussion and future work
+
+
+
++ Building the model with more than just one parameter $r_b$.
+
++ The dataset was shared as a *preliminary exploration* while they do aerial surveys so we can expect more data from different species.
+
++ A crucial aspect of our future work involves enhancing the interpretability of model parameters from both mathematical and applied perspectives.
+
+```{r}
+image_read("timeline.png")
+```
+
+```{r, out.width="100%", echo=FALSE, fig.cap="Bathymetry map for the entire area on the left, sand patches on the middle and islands on the right."}
+c2 <- image_read("dng_plots/plotbtathym_land0.png")
+c3 <- image_read("dng_plots/plotbtathym_sand3to0.png")
+img <- c(c3, c2)
+image_append(img)
+```
+
+# Project 3: survey data application
+
+## Discussion and future work
+
+In marine megafauna scientific research, survey sampling methods from boats or planes are crucial for studying and monitoring large marine species. So future work will be focused on:
+
++ Applying our model in different sampling schemes like line transect surveys.
+
++ Distance sampling framework where detection depends on the distance from the observer or transect line.
+
+```{r}
+image_read("timeline.png")
+```
+
+# Thanks! 
+
+##
+
+## All the other simulations for Project 1...
+
+```{r gifs25, echo=FALSE, fig.cap= "Simulation scenario 2: row one shows the true simulated spatial field; row two and three the posterior mean for the transparent barrier model and the stationary model; and row four and five, the standard deviation for the transparent barrier model and the stationary model"}
+#"480x480+000-300")
+tf2.5 <- image_read("4proposal/width=c(2.5)sm=0.5/true.field.gif")
+img_r1 <- image_append(image_scale(tf2.5, "x400"))
+r1 <- image_crop(img_r1, "2000x400+000+33")
+
+ps_bm2.5 <- image_read("4proposal/width=c(2.5)sm=0.5/pos.mean.gif")
+ps_st2.5 <- image_read("4proposal/width=c(2.5)sm=0.5/stat.rnadom.mean.gif")
+
+#img_r2_ <- c(ps_bm2.5, ps_st2.5)
+#img_r2 <- image_append(image_scale(img_r2_, "x200"), stack = TRUE)
+
+sd_bm2.5 <- image_read("4proposal/width=c(2.5)sm=0.5/pos.sd.gif")
+sd_st2.5 <- image_read("4proposal/width=c(2.5)sm=0.5/pos.sd.st.gif")
+#img_r3_ <- c(sd_bm2.5, sd_st2.5)
+#img_r3 <- image_append(image_scale(img_r3_, "x200"))
+
+r2 <- image_append(image_scale(ps_bm2.5, "x400"))
+r2 <- image_crop(r2, "2000x400+000+33")
+
+r3 <- image_append(image_scale(ps_st2.5, "x400"))
+r3 <- image_crop(r3, "2000x400+000+33")
+
+r4 <- image_append(image_scale(sd_bm2.5, "x400"))
+r4 <- image_crop(r4, "2000x400+000+33")
+
+r5 <- image_append(image_scale(sd_st2.5, "x400"))
+r5 <- image_crop(r5, "2000x400+000+33")
+
+img <- c(r1,r2,r3,r4,r5)
+
+image_append(img, stack = TRUE)
+```
+
+```{r, echo =FALSE, warning=FALSE, message=FALSE}
+df.4 <- read_csv("4proposal/4proposal\\trans2.5.csv")
+knitr::kable(cbind(r, df.4[1:5,2:4]), caption = "summary of posterior range in the Transparent Barrier model for simulation geometry 2")  %>% kableExtra::kable_paper("hover", full_width = F)
+```
+
+```{r, echo =FALSE, warning=FALSE, message=FALSE}
+knitr::kable(cbind(r, df.4[6:10,2:4]), caption = "summary of posterior range in the stationary model for simulation geometry 2")  %>% kableExtra::kable_paper("hover", full_width = F)
+```
+
+```{r, out.width="50%", echo=FALSE, fig.cap="Correlation structure of the trannsparent Barrier model with respect to specific points for simulation scenario 2."}
+c1 <- image_read("4proposal/width=c(2.5)sm=0.5/corr.points1.png")
+c1 <- image_crop(c1, "480x480+000+20")
+c2 <- image_read("4proposal/width=c(2.5)sm=0.5/corr.points2.png")
+c2 <- image_crop(c2, "480x480+000-160")
+img <- c(c1,c2)
+image_append(img, stack = TRUE)
+```
+
+```{r gifs425, echo=FALSE, fig.cap= "Simulation scenario 3: row one shows the true simulated spatial field; row two and three the posterior mean for the transparent barrier model and the stationary model; and row four and five, the standard deviation for the transparent barrier model and the stationary model"}
+#"480x480+000-300")
+tf.4_2.5 <- image_read("4proposal/width=c(.4_2.5)sm=0.5/true.field.gif")
+img_r1 <- image_append(image_scale(tf.4_2.5, "x400"))
+r1 <- image_crop(img_r1, "2000x400+000+33")
+
+ps_bm.4_2.5 <- image_read("4proposal/width=c(.4_2.5)sm=0.5/pos.mean.gif")
+ps_st.4_2.5 <- image_read("4proposal/width=c(.4_2.5)sm=0.5/stat.rnadom.mean.gif")
+
+#img_r2_ <- c(ps_bm.4_2.5, ps_st.4_2.5)
+#img_r2 <- image_append(image_scale(img_r2_, "x200"), stack = TRUE)
+
+sd_bm.4_2.5 <- image_read("4proposal/width=c(.4_2.5)sm=0.5/pos.sd.gif")
+sd_st.4_2.5 <- image_read("4proposal/width=c(.4_2.5)sm=0.5/pos.sd.st.gif")
+#img_r3_ <- c(sd_bm.4_2.5, sd_st.4_2.5)
+#img_r3 <- image_append(image_scale(img_r3_, "x200"))
+
+r2 <- image_append(image_scale(ps_bm.4_2.5, "x400"))
+r2 <- image_crop(r2, "2000x400+000+33")
+
+r3 <- image_append(image_scale(ps_st.4_2.5, "x400"))
+r3 <- image_crop(r3, "2000x400+000+33")
+
+r4 <- image_append(image_scale(sd_bm.4_2.5, "x400"))
+r4 <- image_crop(r4, "2000x400+000+33")
+
+r5 <- image_append(image_scale(sd_st.4_2.5, "x400"))
+r5 <- image_crop(r5, "2000x400+000+33")
+
+img <- c(r1,r2,r3,r4,r5)
+
+image_append(img, stack = TRUE)
+```
+
+```{r, echo =FALSE, warning=FALSE, message=FALSE}
+df.4 <- read_csv("4proposal/4proposal\\trans.4_2.5.csv")
+knitr::kable(cbind(r, df.4[1:5,2:4]), caption = "summary of posterior range in the Transparent Barrier model for simulation geometry 3")  %>% kableExtra::kable_paper("hover", full_width = F)
+```
+
+```{r, echo =FALSE, warning=FALSE, message=FALSE}
+knitr::kable(cbind(r, df.4[6:10,2:4]), caption = "summary of posterior range in the stationary model for simulation geometry 3")  %>% kableExtra::kable_paper("hover", full_width = F)
+```
+
+```{r, out.width="50%", echo=FALSE, fig.cap="Correlation structure of the Transparent Barrier model with respect to specific points for simulation scenario 3."}
+c1 <- image_read("4proposal/width=c(.4_2.5)sm=0.5/corr.points1.png")
+c1 <- image_crop(c1, "480x480+000+20")
+c2 <- image_read("4proposal/width=c(.4_2.5)sm=0.5/corr.points2.png")
+c2 <- image_crop(c2, "480x480+000-160")
+img <- c(c1,c2)
+image_append(img, stack = TRUE)
+```
+
+```{r gifs254, echo=FALSE, fig.cap= "Simulation scenario 4: row one shows the true simulated spatial field; row two and three the posterior mean for the transparent barrier model and the stationary model; and row four and five, the standard deviation for the transparent barrier model and the stationary model"}
+#"480x480+000-300")
+tf2.5_0.4 <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/true.field.gif")
+img_r1 <- image_append(image_scale(tf2.5_0.4, "x400"))
+r1 <- image_crop(img_r1, "2000x400+000+33")
+
+ps_bm2.5_0.4 <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/pos.mean.gif")
+ps_st2.5_0.4 <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/stat.rnadom.mean.gif")
+
+#img_r2_ <- c(ps_bm2.5_0.4, ps_st2.5_0.4)
+#img_r2 <- image_append(image_scale(img_r2_, "x200"), stack = TRUE)
+
+sd_bm2.5_0.4 <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/pos.sd.gif")
+sd_st2.5_0.4 <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/pos.sd.st.gif")
+#img_r3_ <- c(sd_bm2.5_0.4, sd_st2.5_0.4)
+#img_r3 <- image_append(image_scale(img_r3_, "x200"))
+
+r2 <- image_append(image_scale(ps_bm2.5_0.4, "x400"))
+r2 <- image_crop(r2, "2000x400+000+33")
+
+r3 <- image_append(image_scale(ps_st2.5_0.4, "x400"))
+r3 <- image_crop(r3, "2000x400+000+33")
+
+r4 <- image_append(image_scale(sd_bm2.5_0.4, "x400"))
+r4 <- image_crop(r4, "2000x400+000+33")
+
+r5 <- image_append(image_scale(sd_st2.5_0.4, "x400"))
+r5 <- image_crop(r5, "2000x400+000+33")
+
+img <- c(r1,r2,r3,r4,r5)
+
+image_append(img, stack = TRUE)
+```
+
+```{r, echo =FALSE, warning=FALSE, message=FALSE}
+df.4 <- read_csv("4proposal/4proposal\\trans2.5_.4.csv")
+knitr::kable(cbind(r, df.4[1:5,2:4]), caption = "summary of posterior range in the Transparent Barrier model for simulation geometry 4")  %>% kableExtra::kable_paper("hover", full_width = F)
+```
+
+```{r, out.width="50%", echo =FALSE, warning=FALSE, message=FALSE}
+knitr::kable(cbind(r, df.4[6:10,2:4]), caption = "summary of posterior range in the stationary model for simulation geometry 4")  %>% kableExtra::kable_paper("hover", full_width = F)
+```
+
+```{r, out.width="50%", echo=FALSE, fig.cap="Correlation structure of the Transparent Barrier model with respect to specific points for simulation scenario 4."}
+c1 <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/corr.points1.png")
+c1 <- image_crop(c1, "480x480+000+20")
+c2 <- image_read("4proposal/width=c(2.5_0.4)sm=0.5/corr.points2.png")
+c2 <- image_crop(c2, "480x480+000-160")
+img <- c(c1,c2)
+image_append(img, stack = TRUE)
+```

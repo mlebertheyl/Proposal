@@ -1,0 +1,221 @@
+
+```{r setup}
+library(raster)
+library(tidyverse)
+library(INLA)
+library(sp)
+library(rgdal); library(rgeos); library(ggmap); library(terra)
+library(sf)
+library(stars)
+library(ggplot2)
+library(fmesher)
+library(viridis)
+```
+
+```{r}
+# from chunk 1 and 2 in "mybath_explore"
+# from chunk 1:
+# load data w/ raster lib
+bathym_ <- raster("RSPbathym100m.tif")
+crs_longlat <- CRS("+proj=longlat +datum=WGS84")
+crs_km <- CRS("+proj=utm +zone=39 ellps=WGS84 +units=km")
+bathym_longlat <- projectRaster(bathym_, crs = crs_longlat)
+bathym_km <- projectRaster(bathym_, crs = crs_km)
+# creating polygons with terra
+bathym <- terra::rast(bathym_longlat)
+plot(bathym)
+bathym_poly <- terra::as.polygons(bathym > -Inf)
+plot(bathym_poly)
+# getting coordinates for all the polygons
+cords <- terra::crds(bathym)
+# getting bathymetry values for all polygons
+vals <- terra::extract(bathym, as.data.frame(cords))
+# create df with cords and bathym values.
+df_bath <- cbind(as.data.frame(cords), vals) %>% rename(bathymetry = layer)
+# filter polygons corresponding to islands and sand patches, select x, y ordinates.
+sea_cords <- df_bath %>% filter(bathymetry <= -2) %>% select(x,y)
+island_cords <- df_bath %>% filter(bathymetry > -2) %>% select(x,y)
+
+# from chunk 2 (w/o saving files):
+# create raster with NA values for islands.
+raster_islands <- bathym_longlat
+raster_islands[raster_islands>=0] <- NA
+
+# create raster with NA values for sand patches that are specie specific.
+raster_sand <- bathym_longlat
+raster_sand[raster_sand>-2 & raster_sand<0] <- NA
+
+# create raster with NA values for islands and sand patches that are specie specific.
+raster_allholes <- bathym_longlat
+raster_allholes[raster_allholes>-2] <- NA
+
+# from terra lib
+# SpatRaster
+bathym_allholes_map <- terra::rast(raster_allholes)
+plot(bathym_allholes_map)
+
+bathym_poly <- terra::as.polygons(bathym_allholes_map > -Inf) #all holes
+bathym_sp_df <- as(bathym_poly, "Spatial")
+# same as shape_df = as(bathym_sp_df, 'SpatialPolygonsDataFrame')
+
+# from chunk 6 in "mybath_explore"
+# changing the coordinate system to km works
+km_sp4msh = spTransform(bathym_sp_df, crs_km)
+
+mesh_kmD <- inla.mesh.2d(boundary = km_sp4msh, max.edge = c(2, 10), offset = c(10, 10), cutoff = c(1))
+plot(mesh_kmD) #ugly plot, islands have different colored holes. FIX
+# THIS IS THE CORRECT MESH AND PLOT
+```
+
+*alternatively you can load data with stars pckge*
+```{r}
+# from chunk 18 in "mybath_explore"
+# read file with stars pckge
+tif_stars <- read_stars("RSPbathym100m.tif")
+sf_bath <- st_as_sf(tif_stars, crs = crs_longlat)
+# ggplot(sf_bath) + geom_sf()
+sf_iNA <- sf_bath[-which(sf_bath$RSPbathym100m.tif >= -2),]
+# plot(sf_iNA)
+# transform to sp object
+sp_iNA <- as(sf_iNA, "Spatial") # for some reason it's taking a loooong time
+```
+
+*explore polygons for sea and islands*
+we can also plot, make lists and look inside the polygons with these functions.
+```{r}
+# from chunk 10 wrap up in "mybath_explore" we have:
+# from chunk 1 in "mybath_explore"
+raster_sea_holes <- bathym_longlat
+raster_sea_holes[raster_sea_holes<=-2] <- NA
+bathym_sea_holes_map <- terra::rast(raster_sea_holes)
+plot(bathym_sea_holes_map) # PLOTS THE JUST THE LAND, LEAVES THE SEA IN WHITE
+seaNA_poly <- terra::as.polygons(bathym_sea_holes_map > -Inf) #sea as holes
+seaNA_sp_df <- as(seaNA_poly, "Spatial")
+
+# from chunk 3 in my "mybath_explore"
+sp_polygons_seaNA <- geometry(seaNA_sp_df)
+n_poly_sea <- length(sp_polygons_seaNA@polygons[[1]]@Polygons)
+idx_sea <- seq(1:n_poly_sea)
+sea_list = lapply(idx_sea, function(n) Polygon(sp_polygons_seaNA@polygons[[1]]@Polygons[[n]]@coords, hole = F)) 
+sp_sea_holes <- SpatialPolygons(list(Polygons(sea_list,'0')))
+
+# from chunk 4 in my "mybath_explore"
+raster_island_holes <- bathym_longlat
+raster_island_holes[raster_island_holes>-2] <- NA
+bathym_i_holes_map <- terra::rast(raster_island_holes)
+plot(bathym_i_holes_map) # PLOTS THE SEA, AND LEAVES THE ISLANDS IN WHITE
+iNA_poly <- terra::as.polygons(bathym_i_holes_map > -Inf) 
+iNA_sp_df <- as(iNA_poly, "Spatial")
+
+sp_polygons_iNA <- geometry(iNA_sp_df)
+n_poly_i <- length(sp_polygons_iNA@polygons[[1]]@Polygons)
+idx_i <- seq(1:n_poly_i)
+i_list = lapply(idx_i, function(n) Polygon(sp_polygons_iNA@polygons[[1]]@Polygons[[n]]@coords, hole = T)) 
+sp_i_holes <- SpatialPolygons(list(Polygons(i_list,'1')))
+
+# from chunk 5 in my "mybath_explore"
+sp4mesh_all = SpatialPolygons(list(Polygons(append(i_list, sea_list),'1')))
+plot(sp4mesh_all) # PLOTS BATHYMETRY LIKE A PERIMETER DRAWING
+
+mesh_poly = inla.mesh.2d(boundary = sp4mesh_all, max.edge = 0.2) 
+plot(mesh_poly, main = '') # PLOTS THE MESH WITH HOLES ONLY (WRONG MESH)
+```
+
+
+SAVING tif W/ NA VALUES 4 ISLANDS
+```{r}
+# from chunk 2 in "mybath_explore" (just saving NA tif files)
+# create a folder for future rasters with holes
+folder_path <- "created_raster"
+# Create the folder if it doesn't already exist
+if (!file.exists(folder_path)) {
+  dir.create(folder_path)
+}
+
+# create file with holes where there are islands
+# Specify the file path, including the folder, format (e.g., GeoTIFF)
+file_path_1 <- file.path(folder_path, "raster_island.tif")
+# Save the raster to the specified file path
+writeRaster(raster_islands, filename = file_path_1, format = "GTiff", options = "COMPRESS=LZW", overwrite=TRUE)
+
+# create file with holes where there are sand patches
+# Specify the file path, including the folder, format (e.g., GeoTIFF)
+file_path_2 <- file.path(folder_path, "raster_sand.tif")
+# Save the raster to the specified file path
+writeRaster(raster_sand, filename = file_path_2, format = "GTiff", options = "COMPRESS=LZW", overwrite=TRUE)
+
+# create file with holes where there are islands and sand patches
+# Specify the file path, including the folder, format (e.g., GeoTIFF)
+file_path_3 <- file.path(folder_path, "raster_all_holes.tif")
+# Save the raster to the specified file path
+writeRaster(raster_allholes, filename = file_path_3, format = "GTiff", options = "COMPRESS=LZW", overwrite=TRUE)
+
+# save shp file in temporary directory
+# sp object to sf
+sf_bathym <- st_as_sf(bathym_sp_df)
+```
+
+SAVE SHAPE FILE IN TEMP DIRECTORY
+```{r}
+# from chunk 7 in "mybath_explore"
+# save shapefile in temporary directory 
+# st_write(sf_bathym, "bathym_sp_df.shp", driver = "ESRI Shapefile") to save in main folder
+st_write(sf_bathym, paste0(tempdir(), "/", "bathym_sp_df.shp"), driver = "ESRI Shapefile", delete_layer = TRUE)
+# read shapefile
+sf_bathym_file <- st_read(paste0(tempdir(), "/", "bathym_sp_df.shx"))
+st_crs(sf_bathym_file)
+sf_bath_ll <- st_set_crs(sf_bathym_file, crs_longlat)
+# Warning: st_crs<- : replacing crs does not reproject data; use st_transform for that
+sp_df_sf <- as(sf_bath_ll, "Spatial")
+```
+
+POLYGONS 4 MESH
+inla.barrier.polygons after mesh creation chunk 1 of this code.
+fm_contains from fmesher didn't work (my_meshExplore.R file).
+
+```{r}
+# POLYGONS 4 MESH
+# inla.barrier.polygons after mesh creation chunk 1 of this code.
+# fm_contains from fmesher didn't work (my_meshExplore.R file).
+
+# SAME AS: https://haakonbakkagit.github.io/btopic103.html
+tl = length(mesh_kmD$graph$tv[,1])
+# - the number of triangles in the mesh
+posTri = matrix(0, tl, 2)
+for (t in 1:tl){
+  temp = mesh_kmD$loc[mesh_kmD$graph$tv[t, ], ]
+  posTri[t,] = colMeans(temp)[c(1,2)] 
+}
+posTri = SpatialPoints(posTri, proj4string = crs_km)
+
+# - the positions of the triangle centres
+sp_seaNA <- geometry(spTransform(iNA_sp_df, crs_km))
+barrier_alli <- over(sp_seaNA, 
+                     SpatialPoints(posTri, proj4string = crs_km), 
+                     returnList = T)
+normal = unlist(barrier_alli)
+barrier.triangles = setdiff(1:tl, normal)
+poly.barrier = inla.barrier.polygon(mesh_kmD, barrier.triangles)
+
+plot(mesh_kmD, main="Mesh and Omega")
+plot(poly.barrier, add=T, col='lightblue') # PLOTS THE RIGHT MESH, HOLES IN LIGHT BLUE
+# plot(mesh_kmD, add=T)
+barrier.triangles_kmD <-  barrier.triangles 
+inla.barrier_kmD <- poly.barrier
+
+# antes habia puesto seaNA_sp_df instead of iNA_sp_df saltándome setdiff en barrier.triangles y en barrier.polygon para adelante habia usado barrier = normal. Agarra los triangulos fuera del mar cuando hago los mapas de dist en el script para el modelo de Dugong.
+```
+
+This script is still specie specific because it has sand patches according to what what *x* can and cannot cross. i.e. NA are specified for a specific value of bathymetry, this will depend on the specie we're evaluating.
+
+
+
+
+
+
+
+
+
+
+
+

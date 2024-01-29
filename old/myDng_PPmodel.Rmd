@@ -1,0 +1,547 @@
+Do the same as before but construct mesh with just islands instead of using all holes. 
+
+```{r}
+library(leaflet)
+library(leafpop)
+library(leaflet.extras)
+library(htmltools)
+library(sf)
+library(tidyverse)
+library(rnaturalearth)
+library(lattice)
+library(htmlwidgets)
+library(widgetframe)
+library(shiny)
+library(sp)
+library(mapdata)
+library(maptools)
+library(rgeos)
+library(raster)
+library(terra)
+require(devtools)
+library(fields)
+library(terra)
+library(ggplot2)
+library(scales)
+```
+
+```{r 1, echo=FALSE}
+# RUN myData, and generic functions FIRST
+# Data for all species from helicopter surveys.
+# Data_allspp <- readRDS("RSP_survey_sightings.rds")
+# Data for DUGONG
+# Data Incidental Sightings Dugongs
+# Data_ISD <- readRDS("incidental_sightings_dugongs.rds")
+
+Data_7spp <- spp[[7]]
+
+# bind ISD with Survey helicopter data
+# Dugong is the only one that has data coming from 2 sources.
+Data_ISD_ <- select(Data_ISD, c(Lat, Long, geometry)) %>% 
+  rename(lat = Lat, long = Long) %>% 
+  mutate(method = "ISD")
+
+spp7 <- select(Data_7spp, c(lat, long, geometry)) %>% 
+  mutate(method = "Survey")
+all_dugong <- rbind(Data_ISD_, spp7)
+st_crs(Data_ISD_)
+Data_ISD <- st_transform(Data_ISD_, crs_km)
+cords_Dng.xy <- st_coordinates(Data_ISD)
+cords_Dng.sp <- SpatialPoints(cords_Dng.xy, proj4string = crs_km)
+```
+
+
+```{r}
+# from chunk 2 (w/o saving files):
+# create raster with NA values for islands.
+raster_islands <- bathym_longlat
+raster_islands[raster_islands>0] <- NA # different than before 'cause its not >=
+
+# from terra lib
+# SpatRaster
+bathym_islands_map <- terra::rast(raster_islands)
+plot(bathym_islands_map)
+
+bathym_poly <- terra::as.polygons(bathym_islands_map > -Inf) #all holes
+bathym_sp_df <- as(bathym_poly, "Spatial")
+# same as shape_df = as(bathym_sp_df, 'SpatialPolygonsDataFrame')
+
+# from chunk 6 in "mybath_explore"
+# changing the coordinate system to km works
+km_sp4msh = spTransform(bathym_sp_df, crs_km)
+
+mesh_kmD <- inla.mesh.2d(boundary = km_sp4msh, max.edge = c(2, 10), offset = c(10, 10), cutoff = c(1))
+plot(mesh_kmD) #ugly plot, islands have different colored holes. FIX
+# THIS IS THE CORRECT MESH AND PLOT
+summary(mesh_kmD)
+mesh_kmD$crs <- crs_km
+```
+There's one observation that is out of the bathymetry map!
+
+```{r}
+Data_ISD <- st_transform(Data_ISD_, crs_km)
+bathym_sp_df@bbox
+Data_ISD <-
+Data_ISD %>% filter(long > bathym_sp_df@bbox[1,1] &long < bathym_sp_df@bbox[1,2] 
+                    &lat > bathym_sp_df@bbox[2,1] &lat < bathym_sp_df@bbox[2,2])
+# data inside the mesh box                  
+cords_Dng.xy <- st_coordinates(Data_ISD)
+cords_Dng.sp <- SpatialPoints(cords_Dng.xy, proj4string = crs_km)
+```
+
+
+```{r 2, eval=FALSE, echo=FALSE}
+plot1 <- leaflet() %>% 
+  setView(lng = median(Data_ISD$long), lat = median(Data_ISD$lat), zoom = 8) %>%
+  addProviderTiles(providers$OpenStreetMap, group = "Open Street Map") %>% 
+  # Add additional basemap layers
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI World Imagery") %>% 
+  addProviderTiles(providers$Esri.OceanBasemap, group = "ESRI Ocean Basemap") %>% 
+  # Add a User-Interface (UI) control to switch layers
+  addLayersControl(
+    baseGroups = c("Open Street Map","ESRI World Imagery","ESRI Ocean Basemap"),
+    options = layersControlOptions(collapsed = FALSE)) 
+
+frameWidget(plot1, width = "100%", height = "500")
+```
+
+```{r 3}
+plot_dng1 <- leaflet() %>% 
+  setView(lng = mean(Data_ISD$long), lat = mean(Data_ISD$lat), zoom = 8) %>%
+  addProviderTiles(providers$OpenStreetMap, group = "Open Street Map") %>% 
+  # Add additional basemap layers
+  addProviderTiles(providers$Esri.WorldImagery, group = "ESRI World Imagery") %>% 
+  addProviderTiles(providers$Esri.OceanBasemap, group = "ESRI Ocean Basemap") %>% 
+  # Add a User-Interface (UI) control to switch layers
+  addLayersControl(
+    baseGroups = c("Open Street Map","ESRI World Imagery","ESRI Ocean Basemap"),
+    options = layersControlOptions(collapsed = FALSE)) %>%
+  addMarkers(lng = Data_ISD$long, lat = Data_ISD$lat, group = "Dugong",
+             icon = 
+               list(iconUrl = dng_icon,
+                    iconSize = c(20,20)))
+
+frameWidget(plot_dng1, width = "100%", height = "500")
+```
+
+
+```{r added nice mesh plot, message=FALSE}
+# https://rpubs.com/jafet089/886687
+# changing sp to sf
+# max.edge = diff(range(st_coordinates(intensity_sf)[,1]))/(3*5)
+km_sfmsh <- st_as_sf(km_sp4msh)
+mesh_sfkmD <- inla.mesh.2d(boundary = km_sfmsh,
+                         max.edge = c(2, 10), offset = c(10, 10), cutoff = c(1))
+mesh_sfkmD$crs <- crs_km
+plot(mesh_sfkmD) 
+
+plot(mesh_sfkmD, lwd=0.5) 
+points(cords_Dng.xy[,1], cords_Dng.xy[,2], col="red")
+
+gg_mesh <- ggplot() +
+  inlabru::gg(mesh_sfkmD, crs = crs_km) +
+  coord_sf(crs = crs_km) +
+  geom_sf(data=st_as_sf(cords_Dng.sp),
+          col='purple',size=1.7,alpha=0.5)
+gg_mesh
+```
+
+
+```{r}
+# POLYGONS 4 MESH
+# inla.barrier.polygons after mesh creation chunk 1 of this code.
+# fm_contains from fmesher didn't work (my_meshExplore.R file).
+
+# SAME AS: https://haakonbakkagit.github.io/btopic103.html
+tl = length(mesh_kmD$graph$tv[,1])
+# - the number of triangles in the mesh
+posTri = matrix(0, tl, 2)
+for (t in 1:tl){
+  temp = mesh_kmD$loc[mesh_kmD$graph$tv[t, ], ]
+  posTri[t,] = colMeans(temp)[c(1,2)] 
+}
+posTri = SpatialPoints(posTri, proj4string = crs_km)
+
+# - the positions of the triangle centres
+sp_seaNA <- geometry(spTransform(bathym_sp_df, crs_km))
+barrier_alli <- over(sp_seaNA, 
+                     SpatialPoints(posTri, proj4string = crs_km), 
+                     returnList = T)
+normal <- unlist(barrier_alli)
+barrier.triangles <- setdiff(1:tl, normal)
+poly.barrier <- inla.barrier.polygon(mesh_kmD, barrier.triangles)
+
+# plot(mesh_kmD, main="Mesh and Omega")
+# plot(poly.barrier, add=T, col='lightblue') 
+# PLOTS THE RIGHT MESH, HOLES IN LIGHT BLUE
+
+# looks better with sf
+plot(mesh_sfkmD, main="Mesh and Omega")
+plot(st_as_sf(poly.barrier), add=T, col='lightblue') # PLOTS THE RIGHT MESH, HOLES IN LIGHT BLUE
+```
+
+```{r, eval=FALSE}
+sp_seaNA <- spTransform(bathym_sp_df, crs_km) #islands are NA
+barrier_alli_ <- over(sp_seaNA, 
+                     SpatialPoints(posTri, proj4string = crs_km), 
+                     returnList = T)
+normal_ <- unlist(barrier_alli_) 
+#these are the "normal" triangles, i.e. not barrier
+barrier.triangles_ <- setdiff(1:tl, normal_) 
+# I have to add setdiff ´cause over is using islands as NA
+poly.barrier_ <- inla.barrier.polygon(mesh_kmD, barrier.triangles_)
+
+sum(barrier_alli_[[1]]==barrier_alli[[1]]); length(barrier_alli[[1]])
+str(normal_)
+```
+
+```{r}
+water.tri_ <- fm_contains(x = sp_seaNA, y = mesh_kmD,
+                              type = "centroid", ignore.CRS = TRUE)
+# water.tri_; barrier_alli_$`1`[1:10] same
+# ´over´ is the same as ´fm_contains´, so fm also returns "normal" triangles.
+str(over); str(water.tri_)
+
+# over: consistent spatial overlay for points, grids and polygons: at the spatial locations of object x retrieves the indexes or attributes from spatial object y
+# barrier_alli_ has the non-island triangles
+
+# accordingly barrier.tri_ == barrier.triangles_
+num.tri_ <- length(mesh_kmD$graph$tv[, 1]) #num.tri_==tl
+barrier.tri_ <- setdiff(1:num.tri_, water.tri_[[1]])
+# which elements of 1:num.tri_ are only here and not in water.tri_
+
+# the problem is:
+inla.barrier.polygon(mesh_kmD, barrier.triangles = barrier.tri_)
+# this makes sense using fm_contains, I need water.tri_[[1]] instead of water.tri_
+```
+
+```{r 10, warning=FALSE, message=FALSE}
+dmesh <- book.mesh.dual(mesh_kmD)
+domainSP <- km_sp4msh
+
+# with sf
+domainSPsf <- st_as_sf(domainSP)
+dmesh_sf <- st_as_sf(dmesh) 
+st_crs(dmesh_sf) <- crs_km
+# Warning: st_crs<- : replacing crs does not reproject data; use st_transform for that
+
+# with sapply
+w <- sapply(1:length(dmesh), function(i) {
+  if (length(st_intersects(dmesh_sf[i, ], domainSPsf)[[1]]) == 1)
+    return(st_area(st_intersection(dmesh_sf[i, ], domainSPsf)))
+  else {
+    return(0)
+  }
+})
+# TAKES A MILLION YEARS, TALK TO ELIAS ABOUT IT?
+
+store_w <- w
+w <- store_w
+sum(w)
+table(w>0); table(w==0)
+
+pal <- wes_palette("Zissou1")
+colr = rep(c(pal[2]), length = as.numeric(length(w)))
+colr[w>0] = pal[5]
+plot(dmesh, col = colr)
+```
+
+## Poisson Process BM model
+
+```{r 4}
+library(wesanderson)
+# inla.barrier.polygon(mesh_kmD, barrier.triangles = barrier)
+inla.barrier_kmD <- poly.barrier
+```
+
+
+```{r 5}
+# Set up the inla model, including the matrices for solving the SPDE
+# Using: https://haakonbakkagit.github.io/btopic103.html; https://becarioprecario.bitbucket.io/spde-gitbook/ch-nonstationarity.html#ch:barrier; and Dugong modeling
+# barrier model
+barrier.model <- inla.barrier.pcmatern(mesh = mesh_kmD, 
+                                     barrier.triangles = barrier.tri_,
+                                     prior.range = c(5, 0.01), # c(5, 0.01)
+                                     prior.sigma = c(1, 0.01))  # range.fraction=0.1)
+# this is barrier.model in generic codes
+```
+
+```{r 11}
+# https://becarioprecario.bitbucket.io/spde-gitbook/ch-lcox.html#fig:dualmesh
+# https://becarioprecario.bitbucket.io/spde-gitbook/ch-lcox.html
+n <- nrow(cords_Dng.xy) # same n as bin model
+nv <- mesh_kmD$n # 4083 = w
+xy <- cords_Dng.xy
+xy.sp <- cords_Dng.sp
+  
+y.pp <- rep(0:1, c(nv, n))
+#The exposure vector can be defined as:
+e.pp <- c(w, rep(0, n)) 
+length(y.pp); length(e.pp)
+# The projection matrix is defined in two steps. For the integration points this is just a diagonal matrix because these locations are just the mesh vertices:
+imat <- Diagonal(nv, rep(1, nv))
+# For the observed points, another projection matrix is defined:
+lmat <- inla.spde.make.A(mesh_kmD, xy.sp) #It works with xy too.
+# The entire projection matrix is:
+A.pp <- rbind(imat, lmat)
+# We set up the data stack as follows:
+stk.pp <- inla.stack(
+  data = list(y = y.pp, e = e.pp), 
+  A = list(1, A.pp),
+  effects = list(list(b0 = rep(1, nv + n)), list(i = 1:nv)),
+  tag = 'pp')
+```
+
+```{r}
+## ---- results='hold'-------------------------------------------------------------
+cat('Dimension of A: ', dim(A.pp), '\n')
+cat('Dimension of projection matrix: ', dim(imat), '\n')
+cat('Number of mesh points: ', mesh_kmD$n, '\n')
+cat('Number of locations: ', dim(lmat)[1], '\n')
+```
+
+```{r 13}
+# According to Janet's line 219, copyJ_w_useful.R file
+# to try fix the part that it gets stuck (spoiler it took a fucking long time too)
+raster4pred_ <- aggregate(raster_allholes, fact = 2, fun = mean)
+raster4pred <- projectRaster(raster4pred_, crs = CRS("+proj=utm +zone=39 ellps=WGS84 +units=km"))
+dp <- rasterToPoints(raster4pred)
+coop <- dp[, c("x", "y")]
+
+A.pred <- inla.spde.make.A(mesh_kmD, loc = coop)
+
+#Stack for prediction at mesh nodes
+stk.pred <- inla.stack(
+  data = list(y = NA, e = 0),
+  A = list(A.pred, 1),
+  effects =list(list(i = 1:mesh_kmD$n), list(b0 = rep(1, nrow(dp)))), #data = list(y = rep(NA, nrow(coop)), e = rep(0, nrow(coop))),
+  tag = 'pred')
+
+joint.stk <- inla.stack(stk.pp, stk.pred)
+
+form.barrier <- y ~ 0 + b0 + f(i, model = barrier.model)
+pp.res.j <- inla(form.barrier,
+                 data = inla.stack.data(joint.stk),
+                 family = 'poisson', 
+                 control.predictor = list(A = inla.stack.A(joint.stk), link = 1), 
+                 E = inla.stack.data(joint.stk)$e, 
+                 inla.mode = "experimental")
+summary(pp.res.j)
+```
+
+
+```{r 13}
+plot(pp.res.j, plot.prior = TRUE)
+plot(inla.tmarginal(function(x){exp(x)}, pp.res.j$marginals.hyperpar$`Theta1 for i`),
+       type = "l", main = "Posterior for marginal SD")
+plot(inla.tmarginal(function(x){exp(x)}, pp.res.j$marginals.hyperpar$`Theta2 for i`),
+       type = "l", main = "Posterior for range")
+```
+
+
+```{r 13}
+pp.res.pp <- inla(form.barrier, 
+               data = inla.stack.data(stk.pp), 
+               family = 'poisson', 
+               control.predictor = list(A = inla.stack.A(stk.pp), link = 1), 
+               E = inla.stack.data(stk.pp)$e,
+               inla.mode = "experimental")
+
+summary(pp.res.pp)
+```
+
+```{r 13}
+# run in separate .R file instead of Rmarkdown
+poly.water <- sp_seaNA
+local.plot.fieldpp(field = pp.res.j$summary.random$i$mean, 
+                  mesh = mesh_kmD,
+                  poly.water = poly.water,
+                  main = "", 
+                  zlim = c(-3,4))
+plot(poly.barrier, add=T, col='grey', main = '')
+points(cords_Dng.sp[1:n,], pch = 16, cex = 0.5)
+title(main = 'Spatial field')
+
+local.plot.fieldpp(pp.res.j$summary.random$i$sd, 
+                   mesh_kmD,
+                   poly.water,
+                   main = "", 
+                   zlim = c(1.5,2.6))
+plot(poly.barrier, add=T, col='grey', main = '')
+points(cords_Dng.sp[1:n,], pch = 16, cex = 0.5)
+title(main = 'SD of spatial field')
+```
+
+```{r}
+# old code for leaflet
+##Plot predictions on raster
+idx.pred <- inla.stack.index(joint.stk,'pred')$data
+
+pred_mean <- pp.res.j$summary.fitted.values[idx.pred,"mean"]
+pred_map <- rasterize(x = coop, y = raster4pred, field = pred_mean, fun = mean)
+
+pred_map <- projectRaster(pred_map, crs = CRS("+proj=longlat +datum=WGS84"))
+min(pred_map)
+pal <- colorNumeric("viridis", domain = c(0,0.2), na.color = "transparent")
+
+plot8 <-plot_dng1 %>%
+  addRasterImage(pred_map, colors = pal, opacity = 0.8) %>%
+  addScaleBar(position = c("bottomleft"))%>%
+  leaflet::addLegend("bottomright",
+                     pal = pal,
+                     values = seq(0,0.2,by = 0.01))
+
+frameWidget(plot8, width = "100%", height = "500")
+
+pred_sd = pp.res.j$summary.fitted.values[idx.pred,"sd"]
+pred_map <- rasterize(x = coop, y = raster4pred, field = pred_sd, fun = mean)
+
+pred_map <- projectRaster(pred_map, crs = CRS("+proj=longlat +datum=WGS84"))
+pal <- colorNumeric("viridis", c(0.01,0.2), na.color = "transparent")
+
+plot9 <- plot_dng1 %>%
+  addRasterImage(pred_map, colors = pal, opacity = 0.8) %>%
+  addScaleBar(position = c("bottomleft"))%>%
+  leaflet::addLegend("bottomright",
+                     pal = pal,
+                     values = seq(0.01,0.2, by = 0.01))
+
+frameWidget(plot9, width = "100%", height = "500")
+```
+
+
+```{r}
+pred_sd = pp.res.j$summary.fitted.values[idx.pred,"sd"]
+pred_map <- rasterize(x = coop, y = raster4pred, field = pred_sd, fun = mean)
+
+pred_map <- projectRaster(pred_map, crs = CRS("+proj=longlat +datum=WGS84"))
+pal <- colorNumeric("viridis", c(0.01,0.2), na.color = "transparent")
+
+plot_pred.map2 <- plot_dng1 %>%
+  addRasterImage(pred_map, colors = pal, opacity = 0.8) %>%
+  addScaleBar(position = c("bottomleft"))%>%
+  leaflet::addLegend("bottomright",
+                     pal = pal,
+                     values = seq(0.01,1, by = 0.01))
+
+frameWidget(plot_pred.map2, width = "100%", height = "500")
+
+
+```
+
+
+```{r}
+#Red sea geometry
+map <- map("world", c("Saudi Arabia","Egypt", "Jordan","Eritrea", "Sudan", "Yemen"), 
+           fill = TRUE,
+           col = "transparent", plot = FALSE)
+IDs <- sapply(strsplit(map$names, ":"), function(x) x[1])
+map.sp <- map2SpatialPolygons(
+  map, IDs = IDs,
+  proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+
+pl.sel <- SpatialPolygons(list(Polygons(list(Polygon(
+  cbind(c(43, 38, 30, 35), 
+        c(17, 16, 30, 30)),
+  FALSE)), '0')), proj4string = CRS(proj4string(map.sp)))
+
+poly.RS <- gDifference(pl.sel, map.sp)
+
+plot(poly.RS)
+
+plot3 <- plot_dng1 %>% 
+addPolygons(data = poly.RS,
+            group = "Red Sea",
+            color = "blue",
+            weight = 3)
+
+frameWidget(plot3, width = "100%", height = "500")
+```
+
+############
+btopic105 plot priors
+
+Barrier model
+Maybe I should use 
+## Prior for range uses0.01 the study area, which is
+## ... approximately 0.01*diff(range(cords_Dng.xy[,2])) = 2.397593
+
+```{r}
+# https://becarioprecario.bitbucket.io/spde-gitbook/ch-nonstationarity.html
+barrier.model
+# Q
+rango <- 10
+Q.barrier <- inla.rgeneric.q(barrier.model, "Q", theta = c(0, log(rango)))
+```
+
+Stationary model
+```{r}
+# stationary model, Q.stat
+st.spde.model <- inla.spde2.pcmatern(mesh = mesh_kmD,
+                                     prior.range = c(5, 0.01), # c(5, 0.01)
+                                     prior.sigma = c(1, 0.01)) 
+
+# - ignore the priors, they are not used at all (in this topic)
+Q.st <- inla.spde2.precision(st.spde.model, theta = c(log(rango),0))
+# - theta: log range and log sigma (standard deviation parameter)
+```
+
+```{r}
+# The location we find the correlation with respect to
+loc.corr <- cords_Dng.xy[14,]
+corr.stat <- local.find.correlation(Q.st, loc = loc.corr, mesh_kmD) 
+local.plot.fieldpp(corr.stat, mesh_kmD, poly.water)
+local.plot.fieldpp(corr.stat, mesh_kmD, poly.water,
+                   xlim = c(-940, -920),
+                   ylim = c(2890, 2910))
+
+# proj <- inla.mesh.projector(mesh_kmD, xlim = poly.water@bbox[1, ], ylim = poly.water@bbox[2, ], dims = c(200, 100))
+# instead of mesh_kmD, for simluation
+corr.stat_ <- book.spatial.correlation(Q.st, loc = loc.corr, mesh_kmD)
+book.plot.field(corr.stat_, mesh_kmD,
+                zlim = c(0.1, 1))
+plot(poly.barrier, add=T, col='grey')
+
+book.plot.field(corr.stat_, mesh_kmD,
+                dims = c(100,100),
+                xlim = c(-940, -900),
+                ylim = c(2895, 2920),
+                zlim = c(0.1, 1))
+plot(poly.barrier, add=T, col = scales::alpha("grey", 0.5))
+```
+
+
+```{r}
+corr.barrier <- local.find.correlation(Q.barrier, loc = loc.corr, mesh_kmD)
+corr.barrier_ <- book.spatial.correlation(Q.barrier, loc = loc.corr, mesh_kmD)
+
+book.plot.field(corr.barrier_, mesh_kmD,
+                zlim = c(0.1, 1))
+plot(poly.barrier, add=T, col='grey')
+
+book.plot.field(corr.barrier_, mesh_kmD,
+                xlim = c(-940, -900),
+                ylim = c(2895, 2920),
+                zlim = c(0.1, 1))
+plot(poly.barrier, add=T, col = "grey")
+
+```
+
+```{r}
+Q <- inla.rgeneric.q(barrier.model, "Q", theta = c(0, log(12)))
+corr <- local.find.correlation(Q, loc = c(-915,2890), mesh_kmD)
+
+local.plot.fieldpp(corr, mesh_kmD, poly.water = sp_seaNA,
+     xlim = c(-940, -900), ylim = c(2860, 2920))
+plot(poly.barrier, add=T, col='grey', main = 'Barrier Model')
+title(main = 'Barrier Model Prior')
+```
+
+
+
+
+
+
+
+
